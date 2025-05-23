@@ -1,0 +1,12 @@
+let x = false;
+let y = true;
+let z = 5;
+
+if (x == y) {
+    println z * 2
+} else {
+    let k = 2;
+    println (z + k)
+};;
+// 7
+// 0

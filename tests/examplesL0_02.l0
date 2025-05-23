@@ -1,0 +1,5 @@
+let f = fn x, y => { y + x } ;
+
+let g = f (1);
+
+g(2);;

@@ -1,0 +1,7 @@
+let y = false;
+let z = 5;
+
+while (y) {
+    println z
+};;
+// 0

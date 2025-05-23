@@ -1,0 +1,6 @@
+let k = box(2);
+let a = k;
+let b = box(*a);
+
+a := *k+*b;;
+// 4

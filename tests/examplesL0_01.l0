@@ -1,0 +1,8 @@
+let x=1 ;
+
+let f = fn y => { y + x } ;
+
+let g = fn x => { x + f(x) } ;
+
+g(2);;
+// 5
