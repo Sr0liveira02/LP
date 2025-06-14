@@ -1,0 +1,21 @@
+type person = struct { #name : ref<string>, #age: ref<int> };
+type adult = struct { #base : person, #salary: int };
+(
+let f = fn x: person => {
+    println (!(x.#age));
+    println (!(x.#name))
+};
+let j : person = { #name = box("Joao"), #age = box(13) };
+let m : adult = { #base = j, #salary = 10000 };
+f (j);
+j.#name := "Manuel";
+j.#age := 17;
+f (j);
+println (m)
+);;
+// 13
+// Joao
+// 17
+// Manuel
+// Strutura assim: {salary=VInt@45ee12a7, base=VStruct@330bedb4}
+// 0

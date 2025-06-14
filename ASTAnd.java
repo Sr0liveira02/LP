@@ -1,6 +1,17 @@
 public class ASTAnd implements ASTNode {
 
-    ASTNode lhs, rhs;
+        ASTNode lhs, rhs;
+
+        public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
+                ASTType t1 = lhs.typecheck(e);
+                if (t1 instanceof ASTTBool) {
+                        ASTType t2 = rhs.typecheck(e);
+                        if (t2 instanceof ASTTBool) {
+                                return new ASTTBool();
+                        }
+                }
+                throw new TypeCheckerError("illegal types to AND operator");
+        }
 
         public IValue eval(Environment<IValue> e) throws InterpreterError {
                 IValue v1 = lhs.eval(e);

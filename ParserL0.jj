@@ -3,6 +3,7 @@ PARSER_BEGIN(Parser)
 import java.util.*;
 
 public class Parser {
+
 }
 
 PARSER_END(Parser)
@@ -21,17 +22,19 @@ TOKEN :
 
   < LET : "let" >
   |
+  < TYPE : "type" >
+  |
   < TRUE: "true" >
   |
   < FALSE: "false" >
+  |
+  < PIPE : "|">
   |
   < PLUS : "+" >
   |
   < MINUS : "-">
   |
   < STAR : "*">
-  |
-  < DEREF : "!">
   |
   < DIV : "/">
   |
@@ -45,7 +48,13 @@ TOKEN :
   |
   < EQUAL : "=" >
   |
+  < DOT : ".">
+  |
   < COLON : ":" >
+  |
+  < DCOLON : "::" >
+  |
+  < LCOLON : ":?" >
   |
   < SEMIC : ";" >
   |
@@ -63,17 +72,21 @@ TOKEN :
   |
   < LT : "<" >
   |
-  < GTEQ : ">=" >
+  < GE : ">=" >
   |
-  < LTEQ : "<=" >
+  < LE : "<=" >
   |
-  < DIF : ("~=" | "!=") >
+  < NEQ : ("!=" | "~=" ) >
   |
   < NOT : "~" >
   |
   < ASSIGN : ":=" >
   |
   < BOX : "box" >
+  |
+  < NIL : "nil" >
+  |
+  < DEREF : "!" >
   |
   < IF : "if" >
   |
@@ -87,23 +100,33 @@ TOKEN :
   |
   < FN : "fn" >
   |
-  < ARROW : "=>" >
+  <ARROW : "=>">
   |
-  < NIL : "nil" >
+  <SARROW : "->">
   |
-  < LIST : "::" >
+  <MATCH : "match">
   |
-  < LAZYLIST : ":?" >
+  <INT  : "int">
   |
-  < MATCH : "match" >
+  <UNIT  : ( "()" | "unit" )>
   |
-  < MATCHARROW : "->" >
+  <BOOL  : "bool">
   |
-  < MATCHOR : "|" >
+  <STRING  : "string">  
+  |
+  <LIST  : "list">  
+  |
+  <REF  : "ref">  
+  |
+  <UNION  : "union">  
+  |
+  <STRUCT  : "struct"> 
   |
   < String: "\"" ( (~["\"","\\"]) | ("\\" ( ["n","t","b","r","f","\\","\""] ) ) )* "\"" >
   |
-  < Id: ["a"-"z","A"-"Z"] ( ["a"-"z","A"-"Z","0"-"9"] )* >
+  < Id: ["a"-"z","A"-"Z","_"] ( ["_","a"-"z","A"-"Z","0"-"9"] )* >
+  |
+  < Label: ["#"] ( ["_","a"-"z","A"-"Z","0"-"9"] )* >
   |
   < Num: (["0"-"9"]) + >
 }
@@ -116,30 +139,57 @@ ASTNode Start():
 }
 
 ASTNode Let() :
-{ Token n; 
-  ASTNode t, e1, e2;
-  List<Bind> decls  = new ArrayList<Bind>();;
+{
+  Token n;
+  ASTNode t, e1, body;
+  ASTType t1, at = null;
+  List<Object> decls = new ArrayList<Object>(); // Can hold Bind or Map.Entry<String,ASTType>
+  Object decl;
 }
-{ 
+{
+  (
+    // Accept any number of let/type declarations in any order
     (
-    t = Seq()
-    |
-    ((<LET>  n=<Id>  <EQUAL> e1 = BA() <SEMIC>
-      { decls.add(new Bind(n.image,e1)); }
-     )+
-        e2 = Seq() { t = new ASTLet(decls, e2); })
-    )
-    
-   { return t; }
+      (
+        <LET> n=<Id> { at = null; } [ <COLON> at = Type() ] <EQUAL> e1 = BA() <SEMIC>
+        { decls.add(new Bind(n.image, at, e1)); }
+      )
+      |
+      (
+        <TYPE> n=<Id> <EQUAL> t1 = Type() <SEMIC>
+        { decls.add(new java.util.AbstractMap.SimpleEntry<String, ASTType>(n.image, t1)); }
+      )
+    )*
+    body = Seq()
+    {
+      // Now wrap the body in nested ASTLet/ASTTypeDef in reverse order
+      t = body;
+      for (int i = decls.size() - 1; i >= 0; i--) {
+        decl = decls.get(i);
+        if (decl instanceof Bind) {
+          List<Bind> single = new ArrayList<Bind>();
+          single.add((Bind)decl);
+          t = new ASTLet(single, t);
+        } else if (decl instanceof java.util.Map.Entry) {
+          java.util.HashMap<String, ASTType> single = new java.util.HashMap<String, ASTType>();
+          java.util.Map.Entry<String, ASTType> entry = (java.util.Map.Entry<String, ASTType>)decl;
+          single.put(entry.getKey(), entry.getValue());
+          t = new ASTTypeDef(single, t);
+        }
+      }
+    }
+  )
+  { return t; }
 }
 
 ASTNode Seq() :
 {Token op;
   ASTNode t1, t2;}
 {
-     t1 = SeqExp() ( ( op=<SEMIC> ) t2 = SeqExp() 
+     t1 = SeqExp()
+     ( ( op=<SEMIC> ) t2 = SeqExp() 
  		 {
-      t1 = new ASTExp(t1, t2);
+		   t1 = new ASTSeq(t1, t2); 
      } 
 		)*
      { return t1; }  
@@ -151,7 +201,7 @@ ASTNode SeqExp() :
 {
      t1 = BA() ( ( op=<ASSIGN> ) t2 = BA() 
  		 {
-		 t1 = new ASTAssign(t1, t2);
+		   t1 = new ASTAssign(t1, t2); 
      } 
 		)*
      { return t1; }  
@@ -163,7 +213,7 @@ ASTNode BA() :
 {
      t1 = BM() ( ( op=<OR> ) t2 = BM() 
  		 {
-		  t1 = new ASTOr(t1, t2);
+		 t1 = new ASTOr(t1,t2);
 		 } 
 		)*
      { return t1; } 
@@ -175,7 +225,7 @@ ASTNode BM() :
 {
      t1 = Rel() ( ( op=<AND> ) t2 = Rel() 
  		 {
-      t1 = new ASTAnd(t1, t2);
+		 t1 = new ASTAnd(t1,t2);
  		 } 
 		)*
      { return t1; } 
@@ -186,13 +236,13 @@ ASTNode Rel() :
 {Token op;
   ASTNode t1, t2;}
 {
-     t1 = Exp() ( ( op=<EQ> | op=<GT> | op=<LT> | op=<GTEQ> | op=<LTEQ> | op=<DIF>) t2 = Exp() 
+     t1 = Exp() ( ( op=<EQ> | op=<GT> | op=<LT> | op=<GE> | op=<LE> | op=<NEQ>) t2 = Exp() 
      	  	  {
               if (op.image.equals("==") || op.image.equals("~=") || op.image.equals("!="))
                 t1 = new ASTEqual(t1, op.image, t2);
               else
-                t1 = new ASTComp(t1, op.image, t2);
-		   } 
+                t1 = new ASTComp(t1, op.image, t2);            
+            }
 		)?
      { return t1; } 
 }
@@ -202,7 +252,7 @@ ASTNode Exp() :
 { Token op;
   ASTNode t1, t2; }
 {
-     t1=ListExp() ( ( op=<PLUS> | op=<MINUS> ) t2=ListExp() 
+     t1=Term() ( ( op=<PLUS> | op=<MINUS> ) t2=Term() 
                  { if (op.kind == PLUS) 
                          t1 = new ASTPlus(t1,t2);
                    else  t1 = new ASTSub(t1,t2);
@@ -211,69 +261,130 @@ ASTNode Exp() :
      { return t1; } 
 }
 
-ASTNode ListExp() :
-{
-  ASTNode head, tail;
-}
-{
-  head = Term() (
-    <LIST> tail = ListExp() { head = new ASTList(head, tail); }
-  |
-    <LAZYLIST> tail = ListExp() { head = new ASTLazyList(head, tail); }
-  )?
-  { return head; }
-}
-
 ASTNode Term() :
 {Token op;
   ASTNode t1, t2;}
 {
      t1 = Fact() (
-     	  	 op=<STAR> t2 = Fact()   { t1 = new ASTMult(t1,t2); }
+     (op=<DCOLON> | op=<LCOLON>) t2 = Term() 
+     { if (op.kind==DCOLON)
+      {t1 = new ASTCons(t1,t2);}
+      else {t1 = new ASTLCons(t1,t2);}}
+		 |
+     (
+     op=<STAR> t2 = Fact()   { t1 = new ASTMult(t1,t2); }
 		 |
 		 op=<DIV> t2 = Fact()  { t1 = new ASTDiv(t1,t2); }
+     |
+		 op=<DOT> op = <Label>  { t1 = new ASTDot(t1, op.image); }
 		 |
-		 op = <LPAR> t2 = Exp () <RPAR>  { t1 = new ASTApp(t1, t2); } 
+		 op = <LPAR> t2 = Let ()
+		      <RPAR> { t1 = new ASTApp(t1,t2); } 
+     |
+     op = <UNIT> { t1 = new ASTApp(t1,new ASTUnit()); }
 		)*
-     { return t1; }
+    )
+     { return t1; } 
 }
 
-ASTNode Fact() :
-{ Token n, m; 
-  ASTNode t, e1, e2;
-  ASTNode  body, alt;
-  List<String> params = new ArrayList<String>();
+ASTNode Fun() : 
+{
+Token n; 
+ASTNode t, e1=null, e2;
+ASTType at;
 }
 {
+      <FN> n=<Id> <COLON> at = Type()
+      { t = new ASTFun(n.image, at, null); e1 = t;}
+      ( <COMMA> n = <Id> <COLON> at = Type() { e2 = new ASTFun(n.image, at, null);
+		  ((ASTFun)e1).setBody(e2); e1 = e2; })*
+		  <ARROW> <LBRA> e2 = Let() <RBRA> { ((ASTFun)e1).setBody(e2); }
+      { return t; } 
+}
+
+
+ASTNode Fact() :
+{ Token n,m, n1, m1; 
+  ASTNode t, e1, e2;
+  List<Bind> struct = new ArrayList<Bind>();
+  List<MatchStatement> statements = new ArrayList<MatchStatement>();
+  ASTNode  body, alt;
+  ASTType at = null;
+} {
    (
       n=<Num> { t = new ASTInt(Integer.parseInt(n.image)); } 
-    | n=<TRUE> { t = new ASTBool(Boolean.parseBoolean(n.image)); }
-    | n=<FALSE> {  t = new ASTBool(Boolean.parseBoolean(n.image)) ;}
-    | n=<Id> { t = new ASTId(n.image); } 
-    | n=<NIL> { t = new ASTNil(); }
-    | <MATCH> t = Fact() <LBRA> 
-      <NIL> <MATCHARROW> e1 = Let() 
-      <MATCHOR> n = <Id> <LIST> m = <Id> <MATCHARROW> e2 = Let()
-      <RBRA>    { t = new ASTMatch(t, e1, n.image, m.image , e2); }
+    | n=<TRUE> { t = new ASTBool(true); }
+    | n=<FALSE> {  t = new ASTBool(false); }
+    | n=<Id>  { t = new ASTId(n.image); }
+    | n=<String> { t = new ASTString(n.image); }
+    | n=<Label> <LPAR> e1 = Fact() <RPAR> { struct.add(new Bind(n.image, at, e1)); t = new ASTUnion(struct); }
+    | <LBRA> [n = <Label> <EQUAL> e1 = Fact() { struct.add(new Bind(n.image, at, e1)); }
+       (<COMMA> n = <Label> <EQUAL> e1 = Fact() { struct.add(new Bind(n.image, at, e1)); } )*] <RBRA>
+       { t = new ASTStruct(struct); }
+    | <UNIT> {t = new ASTUnit(); }
     | <BOX> t=Fact() { t = new ASTBox(t); }
-    | <STAR> t=Fact() { t = new ASTDeRef(t); }
-    | <DEREF> t=Fact() { t = new ASTDeRef(t); }
+    | <DEREF> t=Fact() { t = new ASTDeref(t); }
     | <MINUS> t=Fact() { t = new ASTNeg(t); }
-    | <NOT> t=Fact() { t = new ASTNot(t); }
-    | <IF> t=BA() <LBRA> e1=Let() <RBRA> <ELSE> <LBRA> e2=Let() <RBRA> { t = new ASTIf(t, e1, e2); }
-    | <WHILE> t=BA() <LBRA> body=Let() <RBRA> { t = new ASTWhile(t, body); }
-    | <FN> n=<Id> { params.add(n.image); }
-      	   	  (<COMMA> n = <Id>  { params.add(n.image); })*
-		  <ARROW> <LBRA> e2 = Let() <RBRA> { 
-        t = e2;
-        for (int i = params.size() - 1; i >= 0; i--) {
-            t = new ASTFn(params.get(i), t);
-        }
-        return t;
-       }
-    | <PRINT> t=Fact() { t = new ASTPrint(t);  }
+    | <NOT> t=Fact() {  t = new ASTNot(t);  }
+    | <IF> t=BA() <LBRA> e1=Let() <RBRA> <ELSE> <LBRA> e2=Let() <RBRA> { t = new ASTIf(t, e1, e2 ); }
+    | <WHILE> t=BA() <LBRA> body=Let() <RBRA> {  t = new ASTWhile(t,body); }
+    | t = Fun()
+    | <PRINT> t=Fact() { t = new ASTPrint(t); }
     | <PRINTLN> t=Fact() { t = new ASTPrintLn(t);  }
     | <LPAR> t=Let() <RPAR> 
+    | <NIL> { t = new ASTNil(); }
+    | <MATCH> t = Let() <LBRA>
+      (<NIL> <SARROW> e1 =Let()
+      <PIPE> n=<Id> <DCOLON> m=<Id> <SARROW> e2 =Let() <RBRA>
+      { t = new ASTMatch(t,e1,n.image,m.image,e2);}
+      |
+      n = <Label> <LPAR> n1 = <Id> <RPAR> <SARROW> e1 = Let() { statements.add(new MatchStatement(n.image, n1.image, e1)); }
+      (<PIPE> m = <Label> <LPAR> m1 = <Id> <RPAR> <SARROW> e2 = Let() { statements.add(new MatchStatement(m.image, m1.image, e2)); } )* <RBRA>
+      { t = new ASTMatchUnit(t, statements); })
     )
    { return t; }
+}
+
+ASTType Type() : 
+{
+  ASTType t1, t2;
+}
+{        
+    t1 = TypeF() (<SARROW> t2 = Type() { t1 = new ASTTArrow(t1,t2);} )?
+    { return t1; }
+}
+
+TypeBindList LabelList() :
+{
+  ASTType t;
+  HashMap<String,ASTType> ll;
+  Token n;
+}
+{   { ll = new HashMap<String,ASTType>() ; }
+    [ n=<Label>  <COLON> t = Type() { ll.put(n.image,t); } 
+              (<COMMA> n=<Label>  <COLON> t = Type() { ll.put(n.image,t);} )*
+    ]
+    { return new TypeBindList(ll); }
+}
+
+ASTType TypeF() : 
+{
+  ASTType t;
+  TypeBindList ll;
+  Token n;
+}
+{        
+    ( 
+          <INT> { t = new ASTTInt(); } 
+        | n=<Id> { t = new ASTTId(n.image); } 
+        | <BOOL> { t = new ASTTBool(); } 
+        | <UNIT> { t = new ASTTUnit(); } 
+        | <STRING> { t = new ASTTString(); } 
+        | <REF> <LT> t=Type() <GT> { t = new ASTTRef(t); }
+        | <LIST> <LT> t=Type() <GT> { t = new ASTTList(t); }
+        | <STRUCT> <LBRA> ll = LabelList() <RBRA> { t = new ASTTStruct(ll); return t; }
+        | <UNION> <LBRA> ll = LabelList() <RBRA> { t = new ASTTUnion(ll); return t; }
+        | <LPAR> t=Type() <RPAR> 
+    )
+    { return t; }
 }

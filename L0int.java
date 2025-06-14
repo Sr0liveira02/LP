@@ -4,7 +4,7 @@ public class L0int {
 	Parser parser = new Parser(System.in);
 	ASTNode exp;
     
-	System.out.println("L0 interpreter PL MEIC 2024/25 (v0.0)\n");
+	System.out.println("\n\n\nL0 interpreter PL MEIC 2024/25 (v0.0)\n");
 
 	while (true) {
 	    try {
@@ -12,6 +12,8 @@ public class L0int {
 			exp = parser.Start();
 			if (exp==null) 
 				System.exit(0);
+			ASTType u = exp.typecheck(new Environment<ASTType>());
+			// System.out.println("Type Checked everything correct.");
 			IValue v = exp.eval(new Environment<IValue>());
 			System.out.println(v.toStr());
 	    } catch (ParseException e) {

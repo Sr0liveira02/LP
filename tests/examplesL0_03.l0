@@ -1,4 +1,4 @@
-let f = fn x, y => { y + x } ;
+let f = fn x: int, y: int => { y + x } ;
 
 f (2) (1);;
 // 3

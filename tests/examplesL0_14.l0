@@ -1,0 +1,21 @@
+let p = "ilovemyself";
+p + 123;;
+// ilovemyself123
+
+let p = { #name = "Luis", #age = 50 };
+println (p.#name);
+p.#age;;
+// Luis
+// 50
+
+type person = struct { #name : string, #age: int  };
+(
+let f = fn x: person => {
+    println (x.#age);
+    x.#name
+};
+let j : person = { #name = "Joao", #age = 13 };
+f (j)
+);;
+// 13
+// Joao

@@ -1,7 +1,19 @@
 public class ASTEqual implements ASTNode {
 
-    ASTNode lhs, rhs;
-    String _op;
+        ASTNode lhs, rhs;
+        String _op;
+
+        public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
+                ASTType t1 = lhs.typecheck(e);
+                ASTType t2 = rhs.typecheck(e);
+                if (t1 instanceof ASTTBool && t2 instanceof ASTTBool) {
+                        return new ASTTBool();
+                } else if (t1 instanceof ASTTInt && t2 instanceof ASTTInt) {
+                        return new ASTTBool();
+                } else {
+                        throw new TypeCheckerError("Illegal types to " + _op + " operator");
+                }
+        }
 
         public IValue eval(Environment<IValue> e) throws InterpreterError {
                 IValue v1 = lhs.eval(e);

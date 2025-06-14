@@ -1,0 +1,75 @@
+type person = struct { #name : string, #age: int  };
+(
+let f = fn x: person => {
+    println (x.#age);
+    x.#name
+};
+f ({ #name = "Joao", #age = 13, #altura = "grande" })
+);;
+// 13
+// Joao
+
+type idk = union { #name: string, #age: int };
+(
+let fun = fn r: idk => {
+    match r {
+        #name(j) -> println (j)
+        | #age(p) -> println (p)
+    }
+};
+fun (#name("Manilo"))
+);;
+// Manilo
+// 0
+
+type person = struct { #name: string, #age: int };
+type adult = struct { #name: string, #age: int, #salary: int};
+(
+let j: person = { #name = "Joao", #age = 13 };
+let pj = box(j);
+let m: adult = { #name = "Manuel", #age = 17, #salary = 10000 };
+let mj = box(m);
+let fun = fn x: ref<person> => {
+    let y: person = !x;
+    println (y.#name)
+};
+fun (pj)
+// fun (mj)
+);;
+// Joao
+// 0
+
+type person = struct { #name: string, #age: int };
+(
+let j: person = { #name = "Joao", #age = 13 };
+let fun = fn x:struct{ #p:person, #sal:int } => {
+    println(x.#p.#name);
+    println(x.#p.#age);
+    println(x.#sal)
+};
+fun ({ #p = j, #sal = 30})
+);;
+// Joao
+// 13 
+// 30
+// 0
+
+// O derradeiro teste de funçoes
+// TODO
+
+
+
+let fun = fn x: bool => {
+    if (x) {
+        println (x)
+    } else {
+        println (~x)
+    }
+};
+fun (1);;
+
+//  TypeCheckerError: illegal types to application operator: bool->(int) and int
+//	at ASTApp.typecheck(ASTApp.java:16)
+//	at ASTLet.typecheck(ASTLet.java:24)
+//	at L0int.main(L0int.java:15)
+

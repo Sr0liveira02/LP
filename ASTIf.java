@@ -3,6 +3,19 @@ public class ASTIf implements ASTNode {
         ASTNode thenBranch;
         ASTNode elseBranch;
 
+        public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
+                ASTType condType = condition.typecheck(e);
+                if (condType instanceof ASTTBool == false) {
+                        throw new TypeCheckerError("Condition must be of type Bool, found: " + condType);
+                }
+                ASTType thenType = thenBranch.typecheck(e);
+                ASTType elseType = elseBranch.typecheck(e);
+                if (thenType.getClass() != elseType.getClass()) {
+                        throw new TypeCheckerError("Branches must have the same type: " + thenType + " vs " + elseType);
+                }
+                return thenType;
+        }
+
         public IValue eval(Environment<IValue> e) throws InterpreterError {
                 IValue cond = condition.eval(e);
                 if (cond instanceof VBool == false) {

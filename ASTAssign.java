@@ -2,6 +2,19 @@ public class ASTAssign implements ASTNode {
     ASTNode l;
     ASTNode r;
 
+    public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
+        ASTType leftType = l.typecheck(e);
+        if (!(leftType instanceof ASTTRef)) {
+            throw new TypeCheckerError("Tipos incompatíveis na atribuição");
+        }
+        ASTTRef leftRefType = (ASTTRef) leftType;
+        ASTType rightType = r.typecheck(e);
+        if (!leftRefType.getType().equals(rightType)) {
+            throw new TypeCheckerError("Tipos incompatíveis na atribuição");
+        }
+        return rightType;
+    }
+
     public IValue eval(Environment<IValue> e) throws InterpreterError {
         IValue left = l.eval(e);
         if (left instanceof VPointer == false) {

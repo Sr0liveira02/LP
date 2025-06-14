@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Check if the Java class file exists
+./makeit.sh
+
+# Check if a filename is provided
+if [ "$1" ]; then
+    # If a file is provided, use input redirection
+    java L0int < "$1"
+else
+    # Otherwise, use standard input (REPL style)
+    java L0int
+fi

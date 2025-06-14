@@ -1,0 +1,14 @@
+type idk = union { #nili: unit, #number: int };
+(
+let j: idk = #number(3);
+let fun = fn r: idk => {
+    match r {
+        #nili(_) -> println (0)
+        | #number(p) -> println (p)
+    }
+};
+fun (j)
+);;
+// 3
+// 0
+
