@@ -14,33 +14,21 @@ public class ASTTList implements ASTType {
         return "list<"+elt.toStr()+">";
     }
     
-    public boolean equals(Object o) {
+    public boolean equals(Object o, Environment<ASTType> env) throws TypeCheckerError {
         if (o instanceof ASTTList) {
             ASTTList other = (ASTTList) o;
             if (this.elt instanceof ASTTUnit && !(other.getElementType() instanceof ASTTUnit)) {
                 return true;
             }
-            return this.elt.equals(other.getElementType());
+            return this.elt.specialEquals(other.getElementType(), env);
         }
         return false;
     }
 
-    public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-        if (elt instanceof ASTTList) {
-            ASTTList listType = (ASTTList) elt;
-            listType.unfold(env);
-        } 
-        if (elt instanceof ASTTId){
-            ASTTId idType = (ASTTId) elt;
-            elt = idType.get(env);
-        }
-    }
-
-    @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         if (other instanceof ASTTList) {
             ASTTList otherList = (ASTTList) other;
-            return otherList.getElementType() instanceof ASTTUnit || this.elt.equals(otherList.getElementType());
+            return otherList.getElementType() instanceof ASTTUnit || this.elt.specialEquals(otherList.getElementType(), env);
         }
         return false;
     }

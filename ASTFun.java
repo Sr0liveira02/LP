@@ -5,14 +5,6 @@ public class ASTFun implements ASTNode {
 
     public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
         try {
-        ASTType something = argType;
-        if (something instanceof ASTTId) {
-            argType = ((ASTTId)something).get(e);
-        }
-        else
-            something.unfold(e);
-        
-        
         Environment<ASTType> newEnv = e.beginScope();
         newEnv.assoc(_identifier, argType);
         // System.out.println("Associando " + _identifier + " com o tipo: " + argType.toStr());

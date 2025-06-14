@@ -5,6 +5,12 @@ public class ASTPlus implements ASTNode {
         public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
                 ASTType t1 = lhs.typecheck(e);
                 ASTType t2 = rhs.typecheck(e);
+                if (t1 instanceof ASTTId) {
+                        t1 = ((ASTTId) t1).get(e);
+                }
+                if (t2 instanceof ASTTId) {
+                        t2 = ((ASTTId) t2).get(e);
+                }
                 // System.out.println("Type of + operator: " + t1.toStr() + " and " + t2.toStr());
                 if (t1 instanceof ASTTString || t2 instanceof ASTTString) {
                         return new ASTTString();

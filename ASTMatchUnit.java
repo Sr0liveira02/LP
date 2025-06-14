@@ -6,6 +6,9 @@ public class ASTMatchUnit implements ASTNode {
 
         public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
                 ASTType var = variable.typecheck(e);
+                if (var instanceof ASTTId) {
+                        var = ((ASTTId) var).get(e);
+                }
                 if (!(var instanceof ASTTUnion)) {
                         throw new TypeCheckerError("Match unit expects a union type, found: " + var.toStr());
                 }
@@ -32,7 +35,7 @@ public class ASTMatchUnit implements ASTNode {
                                 newEnv.assoc(b.getId(), unionType.getFieldType(b.getLabel()));
                                 ASTType newoutT = b.getExp().typecheck(newEnv);
                                 newEnv.endScope();
-                                if (outT != null && !outT.equals(newoutT)) {
+                                if (outT != null && !outT.specialEquals(newoutT, e)) {
                                         throw new TypeCheckerError("Type mismatch in match unit: " + outT.toStr() + " and " + newoutT.toStr());
                                 }
                                 outT = newoutT;

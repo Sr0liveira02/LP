@@ -24,18 +24,12 @@ public class ASTTStruct implements ASTType {
         return "Struct {" + ll.toString() + "}";
     }
 
-    public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-        ll.unfold(env);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ASTTStruct) return ll.equals(((ASTTStruct)obj).getTypeBindList());
+    public boolean equals(Object obj, Environment<ASTType> env) throws TypeCheckerError {
+        if (obj instanceof ASTTStruct) return ll.equals(((ASTTStruct)obj).getTypeBindList(), env);
         else return false;
     }
 
-    @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         if (other instanceof ASTTStruct) {
             ASTTStruct otherStruct = (ASTTStruct) other;
             List<String> otherProperties = otherStruct.getTypeBindList().getProperties();
@@ -46,7 +40,7 @@ public class ASTTStruct implements ASTType {
                 }
                 ASTType thisFieldType = this.ll.getFieldType(property);
                 ASTType otherFieldType = otherStruct.getFieldType(property);
-                if (thisFieldType == null || !thisFieldType.isSubTypeOf(otherFieldType)) {
+                if (thisFieldType == null || !thisFieldType.specialIsSubTypeOf(otherFieldType, env)) {
                     return false; // Field type mismatch
                 }
             }

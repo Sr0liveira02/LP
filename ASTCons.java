@@ -17,7 +17,7 @@ public class ASTCons implements ASTNode {
         
         if (tailType instanceof ASTTList) {
             ASTTList tailListType = (ASTTList) tailType;
-            if (!(tailListType.getElementType() instanceof ASTTUnit) && (!headType.equals(tailListType.getElementType()))) {
+            if (!(tailListType.getElementType() instanceof ASTTUnit) && (!headType.specialEquals(tailListType.getElementType(), e))) {
                 throw new TypeCheckerError("Head type does not match tail element type");
             }
             return new ASTTList(headType);

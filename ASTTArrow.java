@@ -19,34 +19,21 @@ public class ASTTArrow implements ASTType {
 
     public String toStr() {
         return "(" + dom.toStr()+")->("+codom.toStr()+")";
-    }   
-
-    public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-        if (dom instanceof ASTTId)
-            dom = ((ASTTId) dom).get(env);
-        else
-            dom.unfold(env);
-
-        if (codom instanceof ASTTId)
-            codom = ((ASTTId) codom).get(env);
-        else
-            codom.unfold(env);
     }
 
-    @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o, Environment<ASTType> env) throws TypeCheckerError {
         if (this == o) return true;
         if (!(o instanceof ASTTArrow)) return false;
         ASTTArrow that = (ASTTArrow) o;
-        if (!dom.equals(that.dom)) return false;
-        return codom.equals(that.codom);
+        if (!dom.specialEquals(that.dom, env)) return false;
+        return codom.specialEquals(that.codom, env);
     }
 
     @Override
-    public boolean isSubTypeOf(ASTType t) {
+    public boolean isSubTypeOf(ASTType t, Environment<ASTType> env) throws TypeCheckerError {
         if (t instanceof ASTTArrow) {
             ASTTArrow other = (ASTTArrow) t;
-            return other.dom.isSubTypeOf(this.dom) && this.codom.isSubTypeOf(other.codom);
+            return other.dom.specialIsSubTypeOf(this.dom, env) && this.codom.specialIsSubTypeOf(other.codom, env);
         }
         return false;
     }

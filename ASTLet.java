@@ -12,14 +12,10 @@ public class ASTLet implements ASTNode {
             if (b.getType() != null) {
                 // System.out.println("Associating " + b.getId() + " with type: " + b.getType().toStr());
                 ASTType t = b.getType();
-                if (t instanceof ASTTId) 
-                    t = ((ASTTId)t).get(en);
-                else
-                    t.unfold(en);
                 en.assoc(b.getId(), t);
                 ASTType exp = b.getExp().typecheck(en);
                 //System.out.println("Type of " + b.getId() + " is: " + t.toStr() + ", expression type is: " + exp.toStr());
-                if (!t.isSubTypeOf(exp))
+                if (!t.specialIsSubTypeOf(exp, e))
                     throw new TypeCheckerError("Illegal type for " + b.getId() + ": expected " + t.toStr() + ", found " + exp.toStr());
             } else {
                 ASTType t = b.getExp().typecheck(en);

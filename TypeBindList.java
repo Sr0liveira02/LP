@@ -20,23 +20,25 @@ public class TypeBindList  {
                 return new ArrayList<>(lbl.keySet());
         }
 
-        public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-                for (Map.Entry<String, ASTType> entry : lbl.entrySet()) {
-                        ASTType type = entry.getValue();
-                        if (type instanceof ASTTStruct) {
-                                ((ASTTStruct) type).unfold(env);
-                        }
-                        if (type instanceof ASTTId) {
-                                ASTType unfolded = ((ASTTId) type).get(env);
-                                entry.setValue(unfolded);
-                        }
-                }
+        public HashMap<String, ASTType> getMap() {
+                return lbl;
         }
 
-        @Override
-        public boolean equals(Object obj) {
+        public boolean equals(Object obj, Environment<ASTType> env) throws TypeCheckerError {
                 if (!(obj instanceof TypeBindList)) return false;
-                return getProperties().equals(((TypeBindList)obj).getProperties());
+                TypeBindList other = (TypeBindList) obj;
+
+                // Check if both maps have the same keys
+                if (!lbl.keySet().equals(other.getMap().keySet())) return false;
+
+                // Compare each corresponding ASTType using specialEquals
+                for (String key : lbl.keySet()) {
+                        ASTType thisType = lbl.get(key);
+                        ASTType otherType = other.getMap().get(key);
+                        if (thisType == null || otherType == null) return false;
+                        if (!thisType.specialEquals(otherType, env)) return false;
+                }
+                return true;
         }
 
         @Override
@@ -48,5 +50,4 @@ public class TypeBindList  {
                 }
                 return sb.toString();
         }
-
 }

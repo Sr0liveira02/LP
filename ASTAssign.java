@@ -4,13 +4,17 @@ public class ASTAssign implements ASTNode {
 
     public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
         ASTType leftType = l.typecheck(e);
+        if (leftType instanceof ASTTId) {
+            leftType = ((ASTTId) leftType).get(e);
+        }
         if (!(leftType instanceof ASTTRef)) {
-            throw new TypeCheckerError("Tipos incompatíveis na atribuição");
+            throw new TypeCheckerError("Esquerda da atribuição não é uma referência: " + leftType.toStr());
         }
         ASTTRef leftRefType = (ASTTRef) leftType;
         ASTType rightType = r.typecheck(e);
-        if (!leftRefType.getType().equals(rightType)) {
-            throw new TypeCheckerError("Tipos incompatíveis na atribuição");
+        if (!leftRefType.getType().specialEquals(rightType, e)) {
+            throw new TypeCheckerError("Tipo da direita da atribuição não é compatível com a referência: " + 
+                                       leftRefType.getType().toStr() + " != " + rightType.toStr());
         }
         return rightType;
     }

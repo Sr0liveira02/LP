@@ -14,30 +14,18 @@ public class ASTTRef implements ASTType {
         return "ref<"+type.toStr()+">";
     }
 
-    public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-        if (type instanceof ASTTRef) {
-            ASTTRef refType = (ASTTRef) type;
-            refType.unfold(env);
-        } 
-        if (type instanceof ASTTId){
-            ASTTId idType = (ASTTId) type;
-            type = idType.get(env);
-        }
-    }
-
-    public boolean equals(Object o) {
+    public boolean equals(Object o, Environment<ASTType> env) throws TypeCheckerError {
         if (o instanceof ASTTRef) {
             ASTTRef other = (ASTTRef) o;
-            return this.type.equals(other.type);
+            return this.type.specialEquals(other.type, env);
         }
         return false;
     }
 
-    @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         if (other instanceof ASTTRef) {
             ASTTRef otherRef = (ASTTRef) other;
-            return this.type.equals(otherRef.getType());
+            return this.type.specialEquals(otherRef.getType(), env);
         }
         return false;
     }

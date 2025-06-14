@@ -6,12 +6,12 @@ public class ASTTString implements ASTType {
         return "string";
     }
 
-    public boolean equals(Object o) {
+    public boolean equals(Object o, Environment<ASTType> env) throws TypeCheckerError {
         return o instanceof ASTTString;
     }
 
     @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         return other instanceof ASTTString;
     }
 

@@ -28,18 +28,12 @@ public class ASTTUnion implements ASTType {
         return "Union {" + ll.toString() + "}";
     }
 
-    public void unfold(Environment<ASTType> env) throws TypeCheckerError {
-        ll.unfold(env);
-    }
-
-    @Override
-    public boolean equals(Object obj) { // maybe so tens q ter 1 em comun idk
+    public boolean equals(Object obj, Environment<ASTType> env) throws TypeCheckerError { // maybe so tens q ter 1 em comun idk
         if (obj instanceof ASTTUnion) return ll.equals(((ASTTUnion)obj).getTypeBindList());
         else return false;
     }
 
-    @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         if (other instanceof ASTTUnion) {
             ASTTUnion otherStruct = (ASTTUnion) other;
             List<String> otherProperties = otherStruct.getTypeBindList().getProperties();
@@ -50,7 +44,7 @@ public class ASTTUnion implements ASTType {
                 }
                 ASTType thisFieldType = this.ll.getFieldType(property);
                 ASTType otherFieldType = otherStruct.getFieldType(property);
-                if (thisFieldType == null || !otherFieldType.isSubTypeOf(thisFieldType)) {
+                if (thisFieldType == null || !otherFieldType.specialIsSubTypeOf(thisFieldType, env)) {
                     return false; // Field type mismatch
                 }
             }

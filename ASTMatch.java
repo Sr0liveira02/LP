@@ -20,7 +20,7 @@ public class ASTMatch implements ASTNode {
                         } else  {
                                 return outputA;
                         }
-                        if (outputA.equals(outputB)) {
+                        if (outputA.specialEquals(outputB, e)) {
                                 return outputA;
                         } else {
                                 throw new TypeCheckerError("Type mismatch in cons expression: " + outputA.toStr() + " and " + outputB.toStr());

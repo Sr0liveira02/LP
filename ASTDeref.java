@@ -4,6 +4,9 @@ public class ASTDeref implements ASTNode {
 
 	public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
 		ASTType t = exp.typecheck(e);
+		if (t instanceof ASTTId) {
+			t = ((ASTTId)t).get(e);
+		}
 		if (t instanceof ASTTRef) {
 			return ((ASTTRef)t).getType();
 		} else {

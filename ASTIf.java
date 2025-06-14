@@ -10,7 +10,7 @@ public class ASTIf implements ASTNode {
                 }
                 ASTType thenType = thenBranch.typecheck(e);
                 ASTType elseType = elseBranch.typecheck(e);
-                if (thenType.getClass() != elseType.getClass()) {
+                if (thenType.specialIsSubTypeOf(elseType, e) == false && elseType.specialIsSubTypeOf(thenType, e) == false) {
                         throw new TypeCheckerError("Branches must have the same type: " + thenType + " vs " + elseType);
                 }
                 return thenType;

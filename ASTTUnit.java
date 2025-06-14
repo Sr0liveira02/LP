@@ -7,8 +7,11 @@ class ASTTUnit implements ASTType {
         return "()";
     }
 
-    @Override
-    public boolean isSubTypeOf(ASTType other) {
+    public boolean equals(Object o, Environment<ASTType> env) throws TypeCheckerError {
+        return o instanceof ASTTUnit;
+    }
+
+    public boolean isSubTypeOf(ASTType other, Environment<ASTType> env) throws TypeCheckerError {
         return other instanceof ASTTUnit;
     }
 }
