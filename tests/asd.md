@@ -1,13 +1,16 @@
-// fails */
-type Circle = struct { #cx:int, #cy:int, #rad:int };
-type Rectangle = struct { #h:int, #w:int };
-type Blob = union { #circle: Circle, #rect: Rectangle };
-let pi = 3142;
-let area = fn b:union{ #rect: Rectangle } => {
-  match b {
-        #circle(c) -> let r = pi*(c.#rad); (r*r)/2
-    |   #rect(r) -> r.#h * (r.#w)
-    }
-};
-let r1:Blob = #rect({ #h = 10, #w = 20 });
-area(r1);;
+// syntactic sugar for M (()) on function application, M () expands to M (()) */
+
+type ICounter = struct { #inc: () -> int, #get : () -> int };
+let newcounter:int -> ICounter =
+    fn n:int =>
+        { let v = box(n);
+            { 
+                #inc = fn _: () => { v := !v + 1 }, 
+                #get = fn _: () => { !v }
+            }
+        };
+let c0 = newcounter(0);
+    c0.#inc(); 
+    c0.#inc();
+    c0.#get()
+;;

@@ -3,19 +3,6 @@ public class ASTFun implements ASTNode {
     ASTType argType;
     ASTNode body;
 
-    private ASTTArrow rightAssociate(ASTType d, ASTType co) {
-        if (d instanceof ASTTArrow) {
-            ASTTArrow dArrow = (ASTTArrow) d;
-            // Recursively build a new chain for ( d.codom → co )
-            ASTTArrow rightPart = rightAssociate(dArrow.getReturnType(), co);
-            return new ASTTArrow(dArrow.getArgType(), rightPart);
-        }
-        else {
-            // Base case: d is not an arrow, so just return (d → co)
-            return new ASTTArrow(d, co);
-        }
-    }
-
     public ASTType typecheck(Environment<ASTType> e) throws TypeCheckerError {
         try {
         ASTType something = argType;
